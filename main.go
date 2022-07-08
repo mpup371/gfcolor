@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -20,7 +22,10 @@ var (
 	finer   = color.New(color.FgGreen)
 	warning = color.New(color.FgMagenta)
 	severe  = color.New(color.FgRed)
+	debug   = color.New(color.BgBlue)
 )
+
+const RFCJava = "2006-01-02T15:04:05.999-0700"
 
 func split(data []byte, atEOF bool) (int, []byte, error) {
 	start := -1
@@ -42,18 +47,38 @@ func split(data []byte, atEOF bool) (int, []byte, error) {
 			}
 		}
 	}
-	if !atEOF {
-		return 0, nil, nil
+	if atEOF {
+		return 0, nil, bufio.ErrFinalToken
 	}
-	return 0, nil, bufio.ErrFinalToken
+	return 0, nil, nil
 }
 
 func main() {
+	dbg := flag.Bool("d", false, "mode debug")
+	flag.Parse()
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(split)
 	field := 0
 	for scanner.Scan() {
 		line := scanner.Text()
+		if _, err := time.Parse(RFCJava, line); err == nil {
+			yellow.Print(line)
+			fmt.Print(" ")
+			field = 1
+			break
+		}
+	}
+	if field == 0 {
+		panic("cannot find start of line")
+	}
+	for scanner.Scan() {
+		line := scanner.Text()
+		if *dbg {
+			debug.Println(line)
+		}
+		if _, err := time.Parse(RFCJava, line); err == nil {
+			field = 0
+		}
 		switch field {
 		case 0:
 			yellow.Print(line)
