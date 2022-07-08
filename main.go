@@ -53,6 +53,10 @@ func split(data []byte, atEOF bool) (int, []byte, error) {
 	return 0, nil, nil
 }
 
+func init() {
+	color.NoColor = false
+}
+
 func main() {
 	dbg := flag.Bool("d", false, "mode debug")
 	flag.Parse()
